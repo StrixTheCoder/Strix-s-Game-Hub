@@ -1,4 +1,4 @@
-# 🎮 Strixs Game Hub
+# 🎮 Strixs Game Hub (Discontinued)
 
 A modern, fast, and clean web-based game hub where you can play popular browser games anytime, anywhere.  
 Inspired by sites like *Cool Math Games*, but built to be faster, cleaner, and easier to navigate.
