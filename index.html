@@ -100,7 +100,6 @@
 <script>
 /* -------------------------------
    Game list (30+ entries)
-   Keep this as light URLs (no images) — placeholder images are generated
 --------------------------------*/
 const games = [
   { id:'dino',    name: "Dino Game",        url: "https://wayou.github.io/t-rex-runner/",         category: "Arcade" },
@@ -137,10 +136,8 @@ const games = [
   { id:'bubbles', name: "Bubble Shooter",   url: "https://editor.p5js.org/anon/full/0J3k",       category: "Puzzle" }
 ];
 
-/* ---------- helper: placeholder images ---------- */
 function placeholderFor(name, w=640, h=360){
   const text = encodeURIComponent(name);
-  // tiny & dark placeholder with name
   return `https://via.placeholder.com/${w}x${h}.png?text=${text}&bg=111&fg=eee`;
 }
 
@@ -154,14 +151,11 @@ categories.forEach((cat, i) => {
   btn.textContent = cat;
   btn.dataset.cat = cat;
   btn.addEventListener('click', () => {
-    // mark active
     document.querySelectorAll('#categoriesContainer button').forEach(b => b.classList.remove('ring','ring-2','ring-violet-500'));
     btn.classList.add('ring','ring-2','ring-violet-500');
     filterByCategory(cat);
   });
   catContainer.appendChild(btn);
-
-  // mark All active initially
   if(i === 0) btn.classList.add('ring','ring-2','ring-violet-500');
 });
 
@@ -172,34 +166,26 @@ function renderGames(list){
   list.forEach(g => {
     const card = document.createElement('article');
     card.className = 'card bg-slate-800 rounded-lg overflow-hidden';
-
     const thumb = document.createElement('div');
     thumb.className = 'thumb';
     thumb.style.backgroundImage = `url('${placeholderFor(g.name)}')`;
-
     const meta = document.createElement('div');
     meta.className = 'p-3';
     meta.innerHTML = `<div class="font-semibold">${g.name}</div><div class="text-xs text-slate-400">${g.category || ''}</div>`;
-
     const actions = document.createElement('div');
     actions.className = 'p-3 pt-0';
     const playBtn = document.createElement('button');
     playBtn.className = 'w-full px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-cyan-400 text-black font-semibold';
     playBtn.textContent = 'Play Now';
     playBtn.addEventListener('click', (e) => { e.stopPropagation(); openGame(g); });
-
     actions.appendChild(playBtn);
     card.appendChild(thumb);
     card.appendChild(meta);
     card.appendChild(actions);
-
-    // click the card to play too
     card.addEventListener('click', ()=> openGame(g));
-
     grid.appendChild(card);
   });
 }
-/* initial render */
 renderGames(games);
 
 /* ---------- search & filtering ---------- */
@@ -211,7 +197,6 @@ searchInput.addEventListener('input', () => {
   });
   renderGames(filtered);
 });
-
 function filterByCategory(cat){
   if(cat === 'All') renderGames(games);
   else renderGames(games.filter(g => g.category === cat));
@@ -227,48 +212,36 @@ const errorOverlay = document.getElementById('errorOverlay');
 let currentGame = null;
 let loadTimeout = null;
 
-function openGame(g){
+function openGame(g) {
   currentGame = g;
   titleEl.textContent = g.name;
-  hintEl.textContent = (g.category ? 'Category: ' + g.category : '');
+  hintEl.textContent = g.category ? 'Category: ' + g.category : '';
   errorOverlay.classList.add('hidden');
   frame.style.display = 'block';
   overlay.classList.remove('hidden');
-
-  // ensure a quick reload even if same url
-  frame.src = 'about:blank';
-  setTimeout(() => frame.src = g.url, 40);
-
-  // set open new tab buttons
-  document.getElementById('openNewBtn').onclick = ()=> window.open(g.url, '_blank');
-  document.getElementById('openNewBtn2').onclick = ()=> window.open(g.url, '_blank');
-
-  // set basic load fallback: if onload doesn't trigger with content, show error after 3s
+  frame.src = g.url;
+  document.getElementById('openNewBtn').onclick = () => window.open(g.url, '_blank');
+  document.getElementById('openNewBtn2').onclick = () => window.open(g.url, '_blank');
   clearTimeout(loadTimeout);
   loadTimeout = setTimeout(() => {
-    // try to detect empty doc (same-origin only). If cross-origin, we can't reliable detect; assume OK
     try {
-      const d = frame.contentDocument;
-      if(d && d.body && d.body.innerHTML.trim().length < 20) {
+      const doc = frame.contentDocument;
+      if (doc && doc.body && doc.body.innerHTML.trim().length < 20) {
         showEmbedError();
       }
-    } catch(e){
-      // cross-origin -> assume OK (many embeds are cross-origin but work)
-    }
-    // show no-op here; rely on onload event to cancel timeout when possible
-  }, 3000);
+    } catch (e) {}
+  }, 8000);
 }
 
 frame.onload = function(){
   clearTimeout(loadTimeout);
-  // small heuristic to detect embed returning very small content (if same-origin)
   try {
-    const d = frame.contentDocument;
-    if(d && d.body && d.body.innerHTML.trim().length < 20) {
+    const doc = frame.contentDocument;
+    if (doc && doc.body && doc.body.innerHTML.trim().length < 20) {
       showEmbedError();
       return;
     }
-  } catch(e){ /* ignore cross-origin */ }
+  } catch (e) {}
   errorOverlay.classList.add('hidden');
 };
 
@@ -277,7 +250,6 @@ function showEmbedError(){
   errorOverlay.classList.remove('hidden');
 }
 
-/* overlay controls */
 document.getElementById('closeBtn').addEventListener('click', closePlayer);
 document.getElementById('closeErrBtn').addEventListener('click', closePlayer);
 document.getElementById('reloadBtn').addEventListener('click', ()=> {
@@ -292,7 +264,6 @@ document.getElementById('openNewBtn').addEventListener('click', ()=> {
 document.getElementById('openNewBtn2').addEventListener('click', ()=> {
   if(currentGame) window.open(currentGame.url,'_blank');
 });
-
 function closePlayer(){
   overlay.classList.add('hidden');
   frame.src = 'about:blank';
@@ -301,38 +272,17 @@ function closePlayer(){
   errorOverlay.classList.add('hidden');
   clearTimeout(loadTimeout);
 }
-
-/* fullscreen */
 document.getElementById('fsBtn').addEventListener('click', ()=> {
   const container = document.querySelector('#overlay > div') || document.documentElement;
   if(!document.fullscreenElement) container.requestFullscreen?.();
   else document.exitFullscreen?.();
 });
-
-/* keyboard: Esc to close overlay */
 document.addEventListener('keydown', (e)=> {
   if(e.key === 'Escape') {
     if(!overlay.classList.contains('hidden')) closePlayer();
   }
 });
-
-/* random game */
 function randomGame(){
   const idx = Math.floor(Math.random() * games.length);
   openGame(games[idx]);
 }
-document.getElementById('randomBtn').addEventListener('click', randomGame);
-document.getElementById('randomTop').addEventListener('click', randomGame);
-
-/* chest reward */
-document.getElementById('chestTop').addEventListener('click', ()=> {
-  const rewards = ["+50 coins","+100 XP","Lucky Badge","+1 Skin","+10 Gems","Try Premium"];
-  const pick = rewards[Math.floor(Math.random()*rewards.length)];
-  alert("Chest opened!\nReward: " + pick);
-});
-
-/* accessibility */
-searchInput.setAttribute('aria-label','Search games');
-</script>
-</body>
-</html>
